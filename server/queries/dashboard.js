@@ -126,12 +126,10 @@ FROM
   kamar_inap ki
   INNER JOIN reg_periksa reg ON ki.no_rawat = reg.no_rawat
 WHERE
-  ki.tgl_masuk BETWEEN ? AND ?
-  AND reg.stts != 'Batal'
+  reg.stts != 'Batal'
   AND reg.status_lanjut = 'Ranap'
   AND ki.tgl_keluar = '0000-00-00'
-  AND ki.jam_keluar = '00:00:00'`,
-    [date, date]
+  AND ki.jam_keluar = '00:00:00'`
   );
   return rows.length;
 }
@@ -147,8 +145,7 @@ export async function getKapasitasTT() {
 FROM
   kamar where statusdata = '1'`
   );
-  console.log(rows);
-  return rows.length;
+  return rows[0]?.total || 0;
 }
 
 /**
