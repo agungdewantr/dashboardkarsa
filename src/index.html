@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jumpa Karsa RSUD Karsa Husada Batu</title>
+  <meta name="description" content="Dashboard monitoring operasional rumah sakit untuk rawat jalan, IGD, hemodialisa, dan rawat inap." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="header-left">
+        <h1 class="header-title">Dashboard </h1>
+        <p class="header-subtitle">Monitoring Jumlah Pasien RSUD Karsa Husada Batu</p>
+      </div>
+      <div class="header-right">
+        <div class="date-filter" id="dateFilter">
+          <button class="filter-btn active" data-filter="today" id="filterToday">Hari Ini</button>
+          <button class="filter-btn" data-filter="kemarin" id="filterYesterday">Kemarin</button>
+          <button class="filter-btn" data-filter="week" id="filterWeek">Minggu Ini</button>
+          <button class="filter-btn filter-btn-icon" data-filter="custom" id="filterCustom">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Custom
+          </button>
+        </div>
+        <!-- Custom date picker (hidden by default) -->
+        <div class="custom-date-picker hidden" id="customDatePicker">
+          <input type="text" id="customDateInput" class="date-input" placeholder="Pilih tanggal..." readonly />
+        </div>
+      </div>
+    </header>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Memuat data...</p>
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <main class="dashboard-grid" id="dashboardGrid">
+      <!-- Card: Rawat Jalan -->
+      <div class="card card-rajal" id="cardRajal">
+        <div class="card-header">
+          <span class="card-label">JUMLAH RAWAT JALAN</span>
+          <div class="card-icon icon-rajal">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-value" id="rajalValue">—</div>
+          <div class="card-trend" id="rajalTrend">
+            <span class="trend-badge">—</span>
+            <span class="trend-label">vs kemarin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: IGD -->
+      <div class="card card-igd" id="cardIGD">
+        <div class="card-header">
+          <span class="card-label">JUMLAH IGD</span>
+          <div class="card-icon icon-igd">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-value" id="igdValue">—</div>
+          <div class="card-trend" id="igdTrend">
+            <span class="trend-badge">—</span>
+            <span class="trend-label">vs kemarin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: HD -->
+      <div class="card card-hd" id="cardHD">
+        <div class="card-header">
+          <span class="card-label">JUMLAH HD</span>
+          <div class="card-icon icon-hd">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-value" id="hdValue">—</div>
+          <div class="card-trend" id="hdTrend">
+            <span class="trend-badge">—</span>
+            <span class="trend-label">vs kemarin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Rawat Inap Masuk (wider, with chart) -->
+      <div class="card card-ranap-masuk card-wide" id="cardRanapMasuk">
+        <div class="card-header">
+          <span class="card-label">JUMLAH RUJUKAN INTERNAL</span>
+          <div class="card-icon icon-ranap-masuk">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          </div>
+        </div>
+        <div class="card-body card-body-chart">
+          <div class="card-body-left">
+            <div class="card-value" id="ranapMasukValue">—</div>
+            <div class="card-trend" id="ranapMasukTrend">
+              <span class="trend-badge">—</span>
+              <span class="trend-label">vs kemarin</span>
+            </div>
+          </div>
+          <div class="card-body-right">
+            <canvas id="ranapMasukChart" width="180" height="80"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Total Rawat Inap (dark accent) -->
+      <div class="card card-ranap-total card-accent" id="cardRanapTotal">
+        <div class="card-header">
+          <span class="card-label">TOTAL PASIEN RAWAT INAP</span>
+          <div class="card-icon icon-ranap-total">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a4 4 0 0 0-8 0v2"/><line x1="12" y1="11" x2="12" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-value card-value-large" id="ranapTotalValue">—</div>
+          <div class="occupancy-bar-wrapper">
+            <div class="occupancy-bar">
+              <div class="occupancy-fill" id="occupancyFill" style="width: 0%"></div>
+            </div>
+            <div class="occupancy-info">
+              <span>Current Occupancy</span>
+              <span class="occupancy-pct" id="occupancyPct">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="footer">
+      <div class="footer-left">
+        <p class="footer-info" id="footerInfo">
+          HASIL TARIKAN DARI SIMRS KHANZA, YANG BELUM TERVALIDASI OLEH BAGIAN RM DAN MONEV RUMAH SAKIT
+          • TERAKHIR DIPERBARUI: <span id="lastUpdated">—</span>
+        </p>
+      </div>
+      <!-- <div class="footer-right">
+        <a href="#" class="footer-link" id="linkStatus">SYSTEM STATUS</a>
+        <a href="#" class="footer-link" id="linkHelp">HELP DESK</a>
+        <a href="#" class="footer-link" id="linkPrivacy">PRIVACY PROTOCOL</a>
+      </div> -->
+    </footer>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
