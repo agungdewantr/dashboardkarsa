@@ -51,7 +51,8 @@ FROM
 WHERE
   reg.tgl_registrasi BETWEEN ? AND ?
   AND reg.stts != 'Batal'
-  AND pl.kd_poli_rl5 IS NOT NULL`,
+  AND pl.kd_poli_rl5 IS NOT NULL
+  AND reg.kd_poli != 'IGDK' AND reg.kd_poli != '1022'`,
     [date, date]
   );
   return rows[0]?.total || 0;
