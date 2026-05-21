@@ -1,4 +1,4 @@
-import { fetchDashboard, fetchDashboardByDate } from './js/api.js';
+import { fetchDashboard, fetchDashboardByDate, fetchDashboardByRange } from './js/api.js';
 import { updateCard, animateValue } from './js/cards.js';
 import { renderRanapMasukChart } from './js/charts.js';
 import flatpickr from 'flatpickr';
@@ -33,14 +33,16 @@ async function init() {
 // ============================================
 // Data Loading
 // ============================================
-async function loadData(date = null) {
+async function loadData(startDate = null, endDate = null) {
   showLoading();
 
   try {
     let response;
 
-    if (date) {
-      response = await fetchDashboardByDate(date);
+    if (startDate && endDate && startDate !== endDate) {
+      response = await fetchDashboardByRange(startDate, endDate);
+    } else if (startDate) {
+      response = await fetchDashboardByDate(startDate);
     } else {
       response = await fetchDashboard();
     }
@@ -157,7 +159,7 @@ function handleFilterClick(btn) {
       const day = now.getDay();
       const diff = now.getDate() - day + (day === 0 ? -6 : 1);
       const weekStart = new Date(now.setDate(diff));
-      loadData(formatDate(new Date())); // Load current day within week context
+      loadData(formatDate(weekStart), formatDate(new Date())); // Load current week context
       break;
     }
   }

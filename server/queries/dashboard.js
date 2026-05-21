@@ -41,7 +41,7 @@ function getDates() {
  * Query jumlah rawat jalan hari tertentu
  * Tabel: reg_periksa (SIMRS Khanza)
  */
-export async function getJumlahRawatJalan(date) {
+export async function getJumlahRawatJalan(startDate, endDate) {
   const [rows] = await pool.query(
     `SELECT
   COUNT(reg.no_rawat) as total
@@ -53,7 +53,7 @@ WHERE
   AND reg.stts != 'Batal'
   AND pl.kd_poli_rl5 IS NOT NULL
   AND reg.kd_poli != 'IGDK' AND reg.kd_poli != '1022'`,
-    [date, date]
+    [startDate, endDate]
   );
   return rows[0]?.total || 0;
 }
@@ -62,7 +62,7 @@ WHERE
  * Query jumlah IGD hari tertentu
  * Tabel: reg_periksa + poliklinik
  */
-export async function getJumlahIGD(date) {
+export async function getJumlahIGD(startDate, endDate) {
   const [rows] = await pool.query(
     `SELECT
   COUNT(no_rawat) as total
@@ -72,7 +72,7 @@ WHERE
   tgl_registrasi BETWEEN ? AND ?
   AND kd_poli = 'IGDK'
   AND stts != 'Batal'`,
-    [date, date]
+    [startDate, endDate]
   );
   return rows[0]?.total || 0;
 }
@@ -81,7 +81,7 @@ WHERE
  * Query jumlah HD (Hemodialisa) hari tertentu
  * Tabel: reg_periksa + poliklinik
  */
-export async function getJumlahHD(date) {
+export async function getJumlahHD(startDate, endDate) {
   const [rows] = await pool.query(
     `SELECT
   COUNT(no_rawat) as total
@@ -91,7 +91,7 @@ WHERE
   tgl_registrasi BETWEEN ? AND ?
   AND kd_poli = '1022'
   AND stts != 'Batal'`,
-    [date, date]
+    [startDate, endDate]
   );
   return rows[0]?.total || 0;
 }
@@ -100,7 +100,7 @@ WHERE
  * Query jumlah rujuk internal hari tertentu
  * Tabel: kamar_inap
  */
-export async function getJumlahRanapMasuk(date) {
+export async function getJumlahRanapMasuk(startDate, endDate) {
   const [rows] = await pool.query(
     `SELECT
   COUNT(rjk.no_rawat) as total
@@ -110,7 +110,7 @@ FROM
 WHERE
   reg.tgl_registrasi BETWEEN ? AND ?
   AND reg.stts != 'Batal'`,
-    [date, date]
+    [startDate, endDate]
   );
   return rows[0]?.total || 0;
 }
@@ -186,17 +186,21 @@ export async function getRanapMasukWeekly(endDate) {
 /**
  * Fetch semua data dashboard sekaligus (1 batch query)
  */
-export async function fetchAllDashboardData(targetDate) {
+export async function fetchAllDashboardData(targetStartDate, targetEndDate) {
   const { today, kemarin, weekStart } = getDates();
-  const dateToUse = targetDate || today;
+  
+  const startDate = targetStartDate || today;
+  const endDate = targetEndDate || startDate;
 
-  // Tentukan comparison date
-  let comparisonDate;
-  if (dateToUse === today) {
-    comparisonDate = kemarin;
+  // Tentukan comparison date (bandingkan dengan rentang hari sebelumnya)
+  let compStartDate, compEndDate;
+  if (startDate === today && endDate === today) {
+    compStartDate = kemarin;
+    compEndDate = kemarin;
   } else {
-    // Untuk date lain, bandingkan dengan hari sebelumnya
-    comparisonDate = dayjs(dateToUse).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD');
+    // Kurangi 1 hari dari startDate dan endDate
+    compStartDate = dayjs(startDate).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD');
+    compEndDate = dayjs(endDate).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD');
   }
 
   // Execute semua query secara parallel
@@ -213,17 +217,17 @@ export async function fetchAllDashboardData(targetDate) {
     kapasitasTT,
     ranapWeekly,
   ] = await Promise.all([
-    getJumlahRawatJalan(dateToUse),
-    getJumlahRawatJalan(comparisonDate),
-    getJumlahIGD(dateToUse),
-    getJumlahIGD(comparisonDate),
-    getJumlahHD(dateToUse),
-    getJumlahHD(comparisonDate),
-    getJumlahRanapMasuk(dateToUse),
-    getJumlahRanapMasuk(comparisonDate),
-    getTotalRanapAktif(dateToUse),
+    getJumlahRawatJalan(startDate, endDate),
+    getJumlahRawatJalan(compStartDate, compEndDate),
+    getJumlahIGD(startDate, endDate),
+    getJumlahIGD(compStartDate, compEndDate),
+    getJumlahHD(startDate, endDate),
+    getJumlahHD(compStartDate, compEndDate),
+    getJumlahRanapMasuk(startDate, endDate),
+    getJumlahRanapMasuk(compStartDate, compEndDate),
+    getTotalRanapAktif(),
     getKapasitasTT(),
-    getRanapMasukWeekly(dateToUse),
+    getRanapMasukWeekly(endDate), // Tetap pakai endDate untuk mini chart
   ]);
 
   // Calculate percentages

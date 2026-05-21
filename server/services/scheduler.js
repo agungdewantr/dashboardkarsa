@@ -88,7 +88,7 @@ export async function fetchForDateRange(startDate, endDate) {
     data = generateDemoData(endDate);
     data.dateRange = { start: startDate, end: endDate };
   } else {
-    data = await fetchAllDashboardData(endDate);
+    data = await fetchAllDashboardData(startDate, endDate);
     data.dateRange = { start: startDate, end: endDate };
   }
 
