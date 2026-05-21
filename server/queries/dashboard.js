@@ -121,16 +121,14 @@ WHERE
  */
 export async function getTotalRanapAktif(date) {
   const [rows] = await pool.query(
-    `SELECT
-  * 
+    `SELECT DISTINCT
+kamar_inap.no_rawat,
+pasien.nm_pasien
 FROM
-  kamar_inap ki
-  INNER JOIN reg_periksa reg ON ki.no_rawat = reg.no_rawat
-WHERE
-  reg.stts != 'Batal'
-  AND reg.status_lanjut = 'Ranap'
-  AND ki.tgl_keluar = '0000-00-00'
-  AND ki.jam_keluar = '00:00:00'`
+kamar_inap
+INNER JOIN reg_periksa ON kamar_inap.no_rawat = reg_periksa.no_rawat
+INNER JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+WHERE stts_pulang='-'`
   );
   return rows.length;
 }
@@ -141,7 +139,7 @@ WHERE
  */
 export async function getKapasitasTT() {
   const [rows] = await pool.query(
-  `SELECT
+    `SELECT
   COUNT(kd_kamar) as total
 FROM
   kamar where statusdata = '1'`
@@ -238,7 +236,7 @@ export async function fetchAllDashboardData(targetDate) {
     ? parseFloat(((ranapAktif / kapasitasTT) * 100).toFixed(1))
     : 0;
 
-    console.log(kapasitasTT);
+  console.log(kapasitasTT);
 
   return {
     date: dateToUse,
