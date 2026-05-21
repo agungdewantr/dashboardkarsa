@@ -243,8 +243,8 @@ export async function fetchAllDashboardData(targetStartDate, targetEndDate) {
   console.log(kapasitasTT);
 
   return {
-    date: dateToUse,
-    comparisonDate,
+    date: endDate,
+    comparisonDate: compEndDate,
     rawatJalan: {
       total: rajal,
       previous: rajalPrev,
