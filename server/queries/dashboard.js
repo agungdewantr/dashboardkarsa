@@ -119,16 +119,33 @@ WHERE
  * Query total pasien rawat inap saat ini (belum pulang)
  * Tabel: kamar_inap
  */
-export async function getTotalRanapAktif(date) {
+export async function getTotalRanapAktif(startDate, endDate) {
   const [rows] = await pool.query(
-    `SELECT DISTINCT
-kamar_inap.no_rawat,
-pasien.nm_pasien
+//     `SELECT DISTINCT
+// kamar_inap.no_rawat,
+// pasien.nm_pasien
+// FROM
+// kamar_inap
+// INNER JOIN reg_periksa ON kamar_inap.no_rawat = reg_periksa.no_rawat
+// INNER JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+// WHERE stts_pulang='-'`
+`SELECT DISTINCT
+    kamar_inap.no_rawat,
+    pasien.nm_pasien,
+    kamar_inap.tgl_masuk,
+    kamar_inap.tgl_keluar
 FROM
-kamar_inap
+    kamar_inap
 INNER JOIN reg_periksa ON kamar_inap.no_rawat = reg_periksa.no_rawat
 INNER JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
-WHERE stts_pulang='-'`
+WHERE 
+    kamar_inap.tgl_masuk <= ? 
+    AND (
+        kamar_inap.tgl_keluar IS NULL 
+        OR kamar_inap.tgl_keluar = '0000-00-00'
+        OR kamar_inap.tgl_keluar >= ?
+    );`,
+    [startDate, endDate]
   );
   return rows.length;
 }
@@ -225,7 +242,7 @@ export async function fetchAllDashboardData(targetStartDate, targetEndDate) {
     getJumlahHD(compStartDate, compEndDate),
     getJumlahRanapMasuk(startDate, endDate),
     getJumlahRanapMasuk(compStartDate, compEndDate),
-    getTotalRanapAktif(),
+    getTotalRanapAktif(endDate, endDate), // tgl_masuk <= endDate AND tgl_keluar >= endDate
     getKapasitasTT(),
     getRanapMasukWeekly(endDate), // Tetap pakai endDate untuk mini chart
   ]);
