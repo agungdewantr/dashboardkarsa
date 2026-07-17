@@ -109,10 +109,11 @@ function setupEventListeners() {
   if (customDateInput) {
     fp = flatpickr(customDateInput, {
       locale: Indonesian,
-      dateFormat: 'Y-m-d',
+      enableTime: true,
+      time_24hr: true,
+      dateFormat: 'Y-m-d H:i:S',
       altInput: true,
-      altFormat: 'j F Y',
-      maxDate: 'today',
+      altFormat: 'j F Y, H:i',
       disableMobile: true,
       theme: 'material_blue',
       onChange: (selectedDates, dateStr) => {
@@ -150,7 +151,7 @@ function handleFilterClick(btn) {
     case 'kemarin': {
       const kemarin = new Date();
       kemarin.setDate(kemarin.getDate() - 1);
-      loadData(formatDate(kemarin));
+      loadData(formatDate(kemarin) + ' 00:00:00', formatDate(kemarin) + ' 23:59:59');
       break;
     }
     case 'week': {
@@ -159,7 +160,7 @@ function handleFilterClick(btn) {
       const day = now.getDay();
       const diff = now.getDate() - day + (day === 0 ? -6 : 1);
       const weekStart = new Date(now.setDate(diff));
-      loadData(formatDate(weekStart), formatDate(new Date())); // Load current week context
+      loadData(formatDate(weekStart) + ' 00:00:00', formatDate(new Date()) + ' 23:59:59'); // Load current week context
       break;
     }
   }

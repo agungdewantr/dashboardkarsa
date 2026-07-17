@@ -120,34 +120,36 @@ WHERE
  * Tabel: kamar_inap
  */
 export async function getTotalRanapAktif(startDate, endDate) {
+  let endDt_date = endDate.substring(0, 10);
+  let endDt_time = endDate.length > 10 ? endDate.substring(11) : dayjs().tz(TZ).format('HH:mm:ss');
+
+  
   const [rows] = await pool.query(
-//     `SELECT DISTINCT
-// kamar_inap.no_rawat,
-// pasien.nm_pasien
-// FROM
-// kamar_inap
-// INNER JOIN reg_periksa ON kamar_inap.no_rawat = reg_periksa.no_rawat
-// INNER JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
-// WHERE stts_pulang='-'`
-`SELECT DISTINCT
-    kamar_inap.no_rawat,
-    pasien.nm_pasien,
-    kamar_inap.tgl_masuk,
-    kamar_inap.tgl_keluar
-FROM
-    kamar_inap
-INNER JOIN reg_periksa ON kamar_inap.no_rawat = reg_periksa.no_rawat
-INNER JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
-WHERE 
-    kamar_inap.tgl_masuk <= ? 
-    AND (
-        kamar_inap.tgl_keluar IS NULL 
-        OR kamar_inap.tgl_keluar = '0000-00-00'
-        OR kamar_inap.tgl_keluar >= ?
-    );`,
-    [startDate, endDate]
+    `SELECT COUNT(DISTINCT kamar_inap.no_rawat) AS total_pasien
+    FROM
+        kamar_inap
+    INNER JOIN reg_periksa ON kamar_inap.no_rawat = reg_periksa.no_rawat
+    INNER JOIN pasien ON reg_periksa.no_rkm_medis = pasien.no_rkm_medis
+    WHERE 
+    reg_periksa.tgl_registrasi >= '2026-01-01'
+        AND
+        /* 1. Logika Waktu Masuk */
+        (
+            kamar_inap.tgl_masuk < ? 
+            OR (kamar_inap.tgl_masuk = ? AND kamar_inap.jam_masuk <= ?)
+        ) 
+        AND 
+        /* 2. Logika Waktu Keluar */
+        (
+            kamar_inap.tgl_keluar IS NULL 
+            OR kamar_inap.tgl_keluar = '0000-00-00'
+            OR kamar_inap.stts_pulang = '-'
+            OR kamar_inap.tgl_keluar > ? 
+            OR (kamar_inap.tgl_keluar = ? AND kamar_inap.jam_keluar >= ?)
+        );`,
+    [endDt_date, endDt_date, endDt_time, endDt_date, endDt_date, endDt_time]
   );
-  return rows.length;
+  return rows[0]?.total_pasien || 0;
 }
 
 /**
@@ -176,7 +178,7 @@ export async function getRanapMasukWeekly(endDate) {
        AND reg.stts != 'Batal'
      GROUP BY reg.tgl_registrasi 
      ORDER BY reg.tgl_registrasi ASC`,
-    [endDate, endDate]
+    [endDate.substring(0, 10), endDate.substring(0, 10)]
   );
 
   // Buat map dari hasil query
@@ -206,18 +208,24 @@ export async function getRanapMasukWeekly(endDate) {
 export async function fetchAllDashboardData(targetStartDate, targetEndDate) {
   const { today, kemarin, weekStart } = getDates();
   
-  const startDate = targetStartDate || today;
-  const endDate = targetEndDate || startDate;
+  // Normalize startDate and endDate to always include time
+  let startDate = targetStartDate || `${today} 00:00:00`;
+  if (startDate.length === 10) startDate += ' 00:00:00';
+  
+  let endDate = targetEndDate || (targetStartDate ? startDate.substring(0, 10) + ' 23:59:59' : `${today} 23:59:59`);
+  if (endDate.length === 10) endDate += ' 23:59:59';
 
   // Tentukan comparison date (bandingkan dengan rentang hari sebelumnya)
   let compStartDate, compEndDate;
-  if (startDate === today && endDate === today) {
-    compStartDate = kemarin;
-    compEndDate = kemarin;
+  const isToday = startDate.startsWith(today) && endDate.startsWith(today);
+  
+  if (isToday) {
+    compStartDate = startDate.replace(today, kemarin);
+    compEndDate = endDate.replace(today, kemarin);
   } else {
     // Kurangi 1 hari dari startDate dan endDate
-    compStartDate = dayjs(startDate).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD');
-    compEndDate = dayjs(endDate).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD');
+    compStartDate = dayjs(startDate).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
+    compEndDate = dayjs(endDate).tz(TZ).subtract(1, 'day').format('YYYY-MM-DD HH:mm:ss');
   }
 
   // Execute semua query secara parallel
@@ -234,14 +242,14 @@ export async function fetchAllDashboardData(targetStartDate, targetEndDate) {
     kapasitasTT,
     ranapWeekly,
   ] = await Promise.all([
-    getJumlahRawatJalan(startDate, endDate),
-    getJumlahRawatJalan(compStartDate, compEndDate),
-    getJumlahIGD(startDate, endDate),
-    getJumlahIGD(compStartDate, compEndDate),
-    getJumlahHD(startDate, endDate),
-    getJumlahHD(compStartDate, compEndDate),
-    getJumlahRanapMasuk(startDate, endDate),
-    getJumlahRanapMasuk(compStartDate, compEndDate),
+    getJumlahRawatJalan(startDate.substring(0, 10), endDate.substring(0, 10)),
+    getJumlahRawatJalan(compStartDate.substring(0, 10), compEndDate.substring(0, 10)),
+    getJumlahIGD(startDate.substring(0, 10), endDate.substring(0, 10)),
+    getJumlahIGD(compStartDate.substring(0, 10), compEndDate.substring(0, 10)),
+    getJumlahHD(startDate.substring(0, 10), endDate.substring(0, 10)),
+    getJumlahHD(compStartDate.substring(0, 10), compEndDate.substring(0, 10)),
+    getJumlahRanapMasuk(startDate.substring(0, 10), endDate.substring(0, 10)),
+    getJumlahRanapMasuk(compStartDate.substring(0, 10), compEndDate.substring(0, 10)),
     getTotalRanapAktif(endDate, endDate), // tgl_masuk <= endDate AND tgl_keluar >= endDate
     getKapasitasTT(),
     getRanapMasukWeekly(endDate), // Tetap pakai endDate untuk mini chart
@@ -297,7 +305,7 @@ export async function fetchAllDashboardData(targetStartDate, targetEndDate) {
  */
 export function generateDemoData(targetDate) {
   const today = new Date().toISOString().split('T')[0];
-  const dateToUse = targetDate || today;
+  const dateToUse = (targetDate || today).substring(0, 10);
 
   // Randomize with some consistency
   const seed = dateToUse.split('-').reduce((a, b) => a + parseInt(b), 0);

@@ -36,8 +36,8 @@ router.get('/dashboard/date/:date', async (req, res) => {
     const { date } = req.params;
 
     // Validate date format
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return res.status(400).json({ error: 'Format tanggal tidak valid. Gunakan YYYY-MM-DD' });
+    if (!/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/.test(date)) {
+      return res.status(400).json({ error: 'Format tanggal tidak valid. Gunakan YYYY-MM-DD atau YYYY-MM-DD HH:mm:ss' });
     }
 
     const data = await fetchForDate(date);
@@ -64,8 +64,8 @@ router.get('/dashboard/range', async (req, res) => {
       return res.status(400).json({ error: 'Parameter start dan end diperlukan' });
     }
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
-      return res.status(400).json({ error: 'Format tanggal tidak valid. Gunakan YYYY-MM-DD' });
+    if (!/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/.test(start) || !/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/.test(end)) {
+      return res.status(400).json({ error: 'Format tanggal tidak valid. Gunakan YYYY-MM-DD atau YYYY-MM-DD HH:mm:ss' });
     }
 
     const data = await fetchForDateRange(start, end);
