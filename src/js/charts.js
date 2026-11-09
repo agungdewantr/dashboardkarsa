@@ -29,9 +29,12 @@ export function renderRanapMasukChart(weeklyData) {
         {
           data: values,
           backgroundColor: values.map((_, i) =>
-            i === values.length - 1 ? '#1e3a5f' : '#bfdbfe'
+            i === values.length - 1 ? '#7c3aed' : '#c7d2fe'
           ),
-          borderRadius: 6,
+          hoverBackgroundColor: values.map((_, i) =>
+            i === values.length - 1 ? '#6d28d9' : '#a5b4fc'
+          ),
+          borderRadius: 8,
           borderSkipped: false,
           barPercentage: 0.6,
           categoryPercentage: 0.7,

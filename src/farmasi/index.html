@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Perencanaan Obat dan Alkes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF2F1; --surface:#FFFFFF; --ink:#10282E; --ink2:#4A6168; --line:#D0DBDA; --track:#E4ECEB;
+  --crit:#B8281F; --crit-bg:#F7DFDC; --warn:#C27400; --warn-text:#85500A; --warn-bg:#FAE9C8;
+  --safe:#2B7A6B; --safe-text:#1D5C50; --safe-bg:#D9EDE8; --muted:#8CA5AA; --accent:#0E4A55;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1A1D; --surface:#14242A; --ink:#E5EEEE; --ink2:#9CB3B7; --line:#26393E; --track:#1D3036;
+    --crit:#F0665C; --crit-bg:#3A1F1E; --warn:#E8A33A; --warn-text:#EDB65C; --warn-bg:#3A2D14;
+    --safe:#55B9A5; --safe-text:#7CD0BE; --safe-bg:#17352F; --muted:#5F7B81; --accent:#7CC6D2;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1A1D; --surface:#14242A; --ink:#E5EEEE; --ink2:#9CB3B7; --line:#26393E; --track:#1D3036;
+  --crit:#F0665C; --crit-bg:#3A1F1E; --warn:#E8A33A; --warn-text:#EDB65C; --warn-bg:#3A2D14;
+  --safe:#55B9A5; --safe-text:#7CD0BE; --safe-bg:#17352F; --muted:#5F7B81; --accent:#7CC6D2;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 120px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+h1,h2{font-family:Newsreader,Georgia,"Times New Roman",serif;font-weight:600;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(28px,4.2vw,46px);line-height:1.1;max-width:20ch}
+h2{font-size:clamp(21px,2.6vw,27px);line-height:1.2;max-width:34ch}
+p{margin:0}
+.muted{color:var(--ink2)}
+.small{font-size:13px}
+
+/* top */
+.top{padding:28px 0 8px}
+.top .src{font-size:13px;color:var(--ink2);margin-bottom:14px}
+.top .sub{margin-top:14px;font-size:17px;color:var(--ink2);max-width:60ch}
+.top .sub b{color:var(--ink);font-weight:600}
+
+/* controls */
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--paper);border-bottom:1px solid var(--line);margin-top:20px}
+.controls .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;padding-top:10px;padding-bottom:10px}
+.ctl{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2)}
+.ctl label,.ctl .lbl{font-weight:500}
+.ctl output{font-weight:700;color:var(--ink);min-width:58px}
+input[type=range]{width:150px;accent-color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:500}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;font-size:13px}
+.reset{border:0;background:none;text-decoration:underline;color:var(--ink2);font-size:13px;padding:4px}
+
+/* sections */
+section{padding:44px 0 8px}
+section + section{border-top:1px solid var(--line);margin-top:36px}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.sec-p{margin:8px 0 22px;color:var(--ink2);max-width:62ch}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:5px 12px;font-size:13px;font-weight:500}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+
+/* composition */
+.comp{display:flex;height:46px;gap:3px;margin:30px 0 10px}
+.comp button{border:0;border-radius:4px;color:#fff;font-weight:700;font-size:15px;min-width:34px;display:flex;align-items:center;justify-content:center}
+.comp .s-crit{background:var(--crit)} .comp .s-warn{background:var(--warn)} .comp .s-safe{background:var(--safe)}
+.comp button[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:2px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.i-crit{background:var(--crit)} .i-warn{background:var(--warn)} .i-safe{background:var(--safe)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:30px;border-top:1px solid var(--line)}
+.stat{padding:16px 18px 6px 0;min-width:0}
+.stat + .stat{padding-left:18px;border-left:1px solid var(--line)}
+.stat .n{font-family:Newsreader,Georgia,serif;font-size:34px;font-weight:600;line-height:1.1}
+.stat .l{font-size:13px;color:var(--ink2);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stat .n.crit{color:var(--crit)}
+
+/* runway */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px 24px 18px}
+.rw-axis{position:relative;display:grid;grid-template-columns:minmax(110px,220px) 1fr 84px;gap:14px;font-size:12px;color:var(--ink2);height:20px;margin-bottom:6px}
+.rw-axis .ax{position:relative}
+.rw-axis .ax span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.rw-axis .ax span.hd{font-weight:700;color:var(--ink)}
+.rw-axis .ax span.z{transform:none}
+.rw-axis .ax span.e{transform:translateX(-100%)}
+.rw{display:grid;grid-template-columns:minmax(110px,220px) 1fr 84px;gap:14px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.rw:first-of-type{border-top:0}
+.rl{min-width:0}
+.rl .nm{display:block;font-weight:600;font-size:14px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl .ct{font-size:12px;color:var(--ink2)}
+.rt{position:relative;height:22px;background:var(--track);border-radius:3px}
+.rt.empty{background:repeating-linear-gradient(135deg,var(--crit-bg) 0 6px,transparent 6px 12px)}
+.bar{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.bar.crit{background:var(--crit)} .bar.warn{background:var(--warn)} .bar.safe{background:var(--safe)}
+.bar.clip{clip-path:polygon(0 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,0 100%)}
+.hl{position:absolute;top:-7px;bottom:-7px;width:0;border-left:2px dashed var(--ink);pointer-events:none}
+.rv{font-weight:700;font-size:14px;text-align:right}
+.rv.crit{color:var(--crit)} .rv.warn{color:var(--warn-text)} .rv.safe{color:var(--safe-text)}
+.empty-msg{padding:26px 4px;color:var(--ink2)}
+.rw-foot{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.rw-foot .dash{display:inline-block;width:0;height:12px;border-left:2px dashed var(--ink);margin-right:6px;vertical-align:-2px}
+
+.ib{display:flex;justify-content:flex-end;align-items:center}
+.info{width:18px;height:18px;padding:0;border:1.5px solid var(--muted);border-radius:50%;background:none;color:var(--ink2);opacity:.75;font:700 11px/1 Figtree,system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;cursor:help}
+.info:hover,.info:focus-visible{opacity:1;color:var(--ink);border-color:var(--ink)}
+
+.panel.pn{position:relative;padding-top:40px}
+.pn-i{position:absolute;top:12px;right:14px}
+.h-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.h-row .info{margin-top:8px;flex:none}
+.h-tools{display:flex;align-items:center;gap:12px}
+
+/* two column */
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:36px}
+.cat{display:block;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:8px;padding:9px 10px;margin:0 -10px}
+.cat + .cat{margin-top:2px}
+.cat[aria-pressed=true]{border-color:var(--ink);background:var(--surface)}
+.cat:hover{background:var(--surface)}
+.cat .top2{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;margin-bottom:6px}
+.cat .top2 span:last-child{font-weight:500;color:var(--ink2);font-size:13px}
+.stack{display:flex;gap:2px;height:24px}
+.stack span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;border-radius:3px;min-width:0}
+.stack .crit{background:var(--crit)} .stack .warn{background:var(--warn)} .stack .safe{background:var(--safe)}
+.scroll-x{overflow-x:auto}
+.pareto{min-width:560px;width:100%;height:auto;display:block}
+.pareto text{fill:var(--ink2);font-size:11px;font-family:Figtree,system-ui,sans-serif}
+.pbar rect{stroke:none}
+.pbar:focus-visible{outline:none}
+.pbar:focus-visible rect,.pbar:hover rect{stroke:var(--ink);stroke-width:2}
+.note{font-size:12.5px;color:var(--ink2);margin-top:8px}
+
+/* table */
+.tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.tools input{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:14px;width:230px;max-width:100%}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-top:16px}
+table{width:100%;border-collapse:collapse;min-width:820px;font-size:14px}
+th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--line);vertical-align:middle}
+th:first-child,td:first-child{text-align:left}
+th.l,td.l{text-align:left}
+th{font-weight:600;font-size:12.5px;color:var(--ink2);white-space:nowrap;background:var(--surface)}
+th button{border:0;background:none;padding:0;font-weight:600;font-size:12.5px;color:inherit}
+th[aria-sort="ascending"] button::after{content:" \25B2";font-size:9px}
+th[aria-sort="descending"] button::after{content:" \25BC";font-size:9px}
+tbody tr.main:hover{background:var(--track)}
+tr.main.hl-crit td{background:color-mix(in srgb,var(--crit) 7%,transparent)}
+tr.main.hl-warn td{background:color-mix(in srgb,var(--warn) 9%,transparent)}
+tr.main.hl-crit:hover td{background:color-mix(in srgb,var(--crit) 14%,transparent)}
+tr.main.hl-warn:hover td{background:color-mix(in srgb,var(--warn) 16%,transparent)}
+tr.main.hl-crit td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+tr.main.hl-warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+tr.det.hl-crit td{background:color-mix(in srgb,var(--crit) 4%,var(--paper))}
+tr.det.hl-warn td{background:color-mix(in srgb,var(--warn) 5%,var(--paper))}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:13px;color:var(--ink2)}
+.pager .pg{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pager button{min-width:32px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:6px;font-weight:600;font-size:13px;padding:0 10px}
+.pager button[aria-current=page]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.pager button:disabled{opacity:.4;cursor:default}
+.pager .pg span{padding:0 4px}
+.nmb{border:0;background:none;text-align:left;padding:0;font-weight:600;font-size:14px;display:flex;gap:8px;align-items:flex-start}
+.nmb .car{display:inline-block;width:10px;margin-top:3px;font-size:10px;color:var(--ink2)}
+.nmb small{display:block;font-weight:400;font-size:12px;color:var(--ink2)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-weight:600;font-size:12.5px}
+.pill::before{content:"";width:8px;height:8px;background:currentColor}
+.pill.crit{background:var(--crit-bg);color:var(--crit)} .pill.crit::before{border-radius:0}
+.pill.warn{background:var(--warn-bg);color:var(--warn-text)} .pill.warn::before{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.pill.safe{background:var(--safe-bg);color:var(--safe-text)} .pill.safe::before{border-radius:50%}
+.ord{font-weight:700}
+.ord small{display:block;font-weight:400;color:var(--ink2);font-size:12px}
+.cov{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.cov .t{width:64px;height:8px;background:var(--track);border-radius:4px;overflow:hidden}
+.cov .t span{display:block;height:100%}
+.cov .t .crit{background:var(--crit)} .cov .t .warn{background:var(--warn)} .cov .t .safe{background:var(--safe)}
+.cov b{min-width:40px;text-align:right;font-weight:600}
+tr.det td{background:var(--paper);text-align:left;padding:12px 14px 14px 36px}
+tr.det dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 24px;margin:0}
+tr.det dt{font-size:12px;color:var(--ink2)} tr.det dd{margin:0;font-weight:600}
+
+.abc{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border-radius:4px;font-weight:700;font-size:12.5px;border:1px solid var(--line)}
+.abc-A{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.abc-B{background:var(--track)}
+.abc-C{color:var(--ink2)}
+
+/* overstock */
+.ov{display:grid;grid-template-columns:minmax(110px,220px) 1fr 84px;gap:14px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ov:first-child{border-top:0}
+.ov .rt .bar{background:var(--muted)}
+.tl{position:absolute;top:-7px;bottom:-7px;width:0;border-left:2px solid var(--warn);pointer-events:none}
+
+details.caveat{margin:44px 0 36px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink2);font-size:14px}
+details.caveat summary{cursor:pointer;font-weight:600;color:var(--ink)}
+details.caveat ul{margin:10px 0 0;padding-left:20px;max-width:75ch}
+details.caveat li{margin:4px 0}
+
+#tip{position:fixed;z-index:50;background:var(--ink);color:var(--paper);padding:8px 11px;border-radius:6px;font-size:12.5px;line-height:1.45;white-space:pre-line;pointer-events:none;width:max-content;max-width:min(310px,calc(100vw - 16px));box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#tip[hidden]{display:none}
+
+@media (max-width:860px){
+  .two{grid-template-columns:1fr;gap:44px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat:nth-child(3){padding-left:0;border-left:0}
+  .stat:nth-child(n+3){border-top:1px solid var(--line);margin-top:10px;padding-top:16px}
+}
+@media (max-width:560px){
+  .wrap{padding:0 14px}
+  .panel{padding:16px 14px 12px}
+  .rw,.rw-axis,.ov{grid-template-columns:96px 1fr 62px;gap:10px}
+  .stat .n{font-size:28px}
+  input[type=range]{width:110px}
+}
+</style>
+</head>
+<body>
+
+<header class="top wrap">
+  <p class="src">Data real-time Perencanaan Stok Obat dari Database</p>
+  <h1 id="h1"></h1>
+  <p class="sub" id="sub"></p>
+  <div class="comp" id="comp" role="group" aria-label="Komposisi status stok"></div>
+  <div class="legend" id="legend"></div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="ctl">
+      <label for="hz">Horizon perencanaan</label>
+      <input type="range" id="hz" min="3" max="14" step="1" value="7">
+      <output id="hzo" for="hz">7 hari</output>
+    </div>
+    <div class="ctl"><span class="lbl">Status</span><div class="chips" id="stChips"></div></div>
+    <div class="ctl"><label for="catSel">Kategori</label><select id="catSel"></select></div>
+    <button class="reset" id="reset" type="button">Atur ulang</button>
+  </div>
+</div>
+
+<main class="wrap">
+
+<section id="s-runway">
+  <div class="sec-h">
+    <h2 id="runwayTitle"></h2>
+    <div class="seg" role="group" aria-label="Tampilan item">
+      <button type="button" data-view="order" aria-pressed="true">Perlu order</button>
+      <button type="button" data-view="all" aria-pressed="false">Semua item</button>
+    </div>
+  </div>
+  <p class="sec-p">Setiap batang adalah berapa hari stok saat ini bisa menutup pemakaian. Batang yang berhenti sebelum garis putus-putus tidak akan cukup untuk seluruh periode perencanaan.</p>
+  <div class="panel pn">
+    <button type="button" class="info pn-i" id="infoRun" aria-label="Cara membaca chart ini">i</button>
+    <div class="rw-axis" id="rwAxis"></div>
+    <div id="runway"></div>
+    <div class="rw-foot">
+      <span><i class="dash"></i><span id="hlLbl"></span></span>
+      <span class="legend"><span><i class="i-crit"></i>Kritis: stok kosong</span><span><i class="i-warn"></i>Kurang: stok ada tapi tidak cukup</span><span><i class="i-safe"></i>Aman</span></span>
+    </div>
+  </div>
+</section>
+
+<section id="s-where">
+  <div class="two">
+    <div>
+      <h2 id="catTitle"></h2>
+      <p class="sec-p">Panjang batang menunjukkan jumlah item per kategori. Chart ini selalu menampilkan semua kategori; pilih salah satu untuk menyaring bagian lain dashboard.</p>
+      <div class="panel pn"><button type="button" class="info pn-i" id="infoCat" aria-label="Cara membaca chart ini">i</button><div id="cats"></div></div>
+    </div>
+    <div>
+      <div class="sec-h">
+        <h2 id="parTitle"></h2>
+        <div class="seg" role="group" aria-label="Jumlah item pada grafik Pareto">
+          <button type="button" data-pn="10" aria-pressed="true">10 teratas</button>
+          <button type="button" data-pn="999" aria-pressed="false">Semua</button>
+        </div>
+      </div>
+      <p class="sec-p">Batang menunjukkan pemakaian 30 hari dan garis menunjukkan persentase kumulatif. Latar abu menandai kelas A, B, dan C; warna batang mengikuti status stok.</p>
+      <div class="panel pn"><button type="button" class="info pn-i" id="infoPar" aria-label="Cara membaca chart ini">i</button><div class="scroll-x"><div id="pareto"></div></div></div>
+      <p class="note"><b>Kelas ABC</b> dihitung dari pemakaian kumulatif: A sampai 80%, B dari 80% sampai 95%, C sisanya. Kelas dihitung ulang dalam cakupan kategori yang dipilih. Item di luar filter status tampil redup.</p>
+      <p class="note">Satuan antar item berbeda (pieces, ampul, cm, dan lain-lain). Gunakan grafik ini untuk membandingkan urutan dan proporsi, bukan sebagai total fisik.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s-act">
+  <div class="sec-h">
+    <h2 id="tblTitle"></h2>
+    <div class="tools"><input type="search" id="q" placeholder="Cari nama item" aria-label="Cari nama item"><label class="small muted" for="pageSize">Tampilkan</label><select id="pageSize"><option value="10">10 data</option><option value="15">15 data</option><option value="20">20 data</option><option value="25">25 data</option></select></div>
+  </div>
+  <p class="sec-p">Baris berlatar warna adalah item yang perlu order: merah untuk kritis, kuning untuk kurang. Urut dari yang paling mendesak. Klik nama item untuk melihat rincian, klik judul kolom untuk mengurutkan.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th scope="col" class="l" data-k="nama_brng"><button type="button">Item</button></th>
+        <th scope="col" class="l" data-k="urgency"><button type="button">Status</button></th>
+        <th scope="col" class="l" data-k="abc"><button type="button">Kelas</button></th>
+        <th scope="col" data-k="stok_saat_ini"><button type="button">Stok</button></th>
+        <th scope="col" data-k="need"><button type="button" id="thNeed">Kebutuhan</button></th>
+        <th scope="col" data-k="cover"><button type="button">Cakupan</button></th>
+        <th scope="col" data-k="days"><button type="button">Sisa hari</button></th>
+        <th scope="col" data-k="order"><button type="button">Order disarankan</button></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="pager" id="pager"></div>
+</section>
+
+<section id="s-over">
+  <div class="sec-h">
+    <h2 id="ovTitle"></h2>
+    <div class="ctl">
+      <label for="ovr">Batas stok berlebih</label>
+      <input type="range" id="ovr" min="30" max="120" step="5" value="60">
+      <output id="ovro" for="ovr">60 hari</output>
+    </div>
+  </div>
+  <p class="sec-p">Item yang stoknya melebihi batas di samping (awal 60 hari). Ini batas kebijakan, bukan standar baku, jadi sesuaikan dengan lead time pemasok dan masa kedaluwarsa. Item di sini tidak perlu order dan layak dicek tanggal kedaluwarsanya.</p>
+  <div class="panel pn"><button type="button" class="info pn-i" id="infoOv" aria-label="Cara membaca chart ini">i</button><div id="over"></div></div>
+</section>
+
+<details class="caveat">
+  <summary>Cara membaca dan keterbatasan data</summary>
+  <ul>
+    <li>Order disarankan = kebutuhan selama horizon perencanaan dikurangi stok saat ini. Pada horizon 7 hari, angkanya sama dengan file sumber.</li>
+    <li>Status Kritis berarti stok 0. Kurang berarti stok ada tetapi kurang dari kebutuhan. Aman berarti stok mencukupi horizon.</li>
+    <li>Belum memperhitungkan stok pengaman, lead time pemasok, anggaran, dan tanggal kedaluwarsa.</li>
+    <li>Kelas ABC: A adalah item yang bersama-sama menyumbang 80% pemakaian, B berikutnya hingga 95%, C sisanya. Item kelas A yang perlu order adalah prioritas utama.</li>
+    <li>Konsumsi harian diasumsikan tetap sama dengan rata-rata 30 hari terakhir.</li>
+    <li>Satuan antar item tidak seragam, sehingga jumlah order tidak dijumlahkan lintas item. Superfix dan Decafix dihitung dalam cm; konversi ke roll memakai 1 roll = 500 cm.</li>
+    <li>Harga satuan belum tersedia. Menambahkannya akan memungkinkan nilai order dalam Rupiah.</li>
+  </ul>
+</details>
+
+</main>
+<div id="tip" hidden></div>
+
+<script>
+let RAW = [];
+
+const state = {H:7, status:'all', cat:'all', view:'order', pn:10, sort:{key:'urgency',dir:1}, q:'', page:1, pageSize:10, over:60, open:new Set()};
+const ST = {
+    'KRITIS (Stok Kosong)':{label:'Kritis',cls:'crit',rank:0}, 
+    'KURANG (Order Diperlukan)':{label:'Kurang',cls:'warn',rank:1}, 
+    'AMAN':{label:'Aman',cls:'safe',rank:2},
+    kritis:{label:'Kritis',cls:'crit',rank:0}, 
+    kurang:{label:'Kurang',cls:'warn',rank:1}, 
+    aman:{label:'Aman',cls:'safe',rank:2}
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = new Intl.NumberFormat('id-ID',{maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt = n => nf.format(Math.round(n));
+const fmtDays = d => d <= 0 ? 'Kosong' : (d < 10 ? nf1.format(d) : nf.format(Math.round(d))) + ' hari';
+const pct = x => Math.round(x*100) + '%';
+const catName = c => c ? c.toLowerCase().replace(/\b\w/g, m => m.toUpperCase()) : 'Lainnya';
+let CATS = [];
+const sum = (a, f) => a.reduce((s, x) => s + f(x), 0);
+
+let ALL = [], base = [], filt = [];
+
+function compute(){
+  return RAW.map(d => {
+    const need = state.H === 7 ? d.estimasi_kebutuhan_7hari : Math.round(d.konsumsi_per_hari * state.H);
+    const order = Math.max(0, Math.ceil(need - d.stok_saat_ini));
+    // Horizon 7 hari: pakai status_perencanaan dari data backend
+    // d.status_perencanaan is from the new API
+    let status_str = d.status_perencanaan || d.status_stok;
+    let status_key = status_str;
+    if(status_str === 'KRITIS (Stok Kosong)') status_key = 'kritis';
+    if(status_str === 'KURANG (Order Diperlukan)') status_key = 'kurang';
+    if(status_str === 'AMAN') status_key = 'aman';
+    
+    const status = state.H === 7 && ST[status_key] ? status_key
+      : d.stok_saat_ini <= 0 ? 'kritis' : (order > 0 ? 'kurang' : 'aman');
+    return {...d, need, order, status, days: d.stok_saat_ini / d.konsumsi_per_hari, cover: need ? d.stok_saat_ini / need : 1};
+  });
+}
+
+function assignABC(list){
+  const tot = sum(list, d => d.total_pemakaian_30hari); let cum = 0;
+  list.slice().sort((a,b) => b.total_pemakaian_30hari - a.total_pemakaian_30hari).forEach(d => {
+    const before = tot ? cum / tot : 1;
+    d.abc = before < 0.8 ? 'A' : before < 0.95 ? 'B' : 'C';
+    cum += d.total_pemakaian_30hari; d.cum = tot ? cum / tot : 1;
+  });
+}
+
+function tipAttr(d){
+  return esc(`${d.nama_brng}\n${catName(d.kategori_obat)}\nStok: ${fmt(d.stok_saat_ini)} ${d.satuan}\nKebutuhan ${state.H} hari: ${fmt(d.need)}\nKelas ABC: ${d.abc}\nSisa hari: ${fmtDays(d.days)}\nOrder: ${fmt(d.order)} ${d.satuan}`);
+}
+
+/* ---------- head ---------- */
+function renderHead(){
+  const tot = base.length;
+  const kr = base.filter(d => d.status === 'kritis'), ku = base.filter(d => d.status === 'kurang'), am = base.filter(d => d.status === 'aman');
+  const n = kr.length + ku.length, H = state.H;
+  $('#h1').textContent = n ? `${n} dari ${tot} item tidak cukup untuk ${H} hari ke depan` : `Semua ${tot} item cukup untuk ${H} hari ke depan`;
+  const parts = [];
+  if (kr.length) parts.push(`<b>${kr.length} item sudah kosong</b>`);
+  if (ku.length) parts.push(`<b>${ku.length} item</b> akan habis sebelum hari ke-${H}`);
+  const scope = state.cat === 'all' ? '' : ` Menampilkan kategori ${esc(catName(state.cat))}.`;
+  const nA = [...kr, ...ku].filter(d => d.abc === 'A').length;
+  const aTxt = !n ? '' : nA ? ` Dari jumlah itu, <b>${nA} termasuk kelas A</b> (pemakaian tertinggi) sehingga paling perlu diprioritaskan.` : ' Tidak ada yang termasuk kelas A (pemakaian tertinggi).';
+  $('#sub').innerHTML = (n ? parts.join(' dan ') + '.' : 'Tidak ada order yang diperlukan pada horizon ini.') + aTxt + scope;
+
+  const seg = [['kritis',kr.length],['kurang',ku.length],['aman',am.length]].filter(s => s[1] > 0);
+  $('#comp').innerHTML = seg.map(([k,c]) => `<button type="button" class="s-${ST[k].cls}" style="flex:${c} 1 0" data-st="${k}" aria-pressed="${state.status===k}" aria-label="${ST[k].label}: ${c} item. Klik untuk menyaring">${c}</button>`).join('');
+  $('#legend').innerHTML = ['kritis','kurang','aman'].map(k => {
+    const c = base.filter(d => d.status === k).length;
+    return `<span><i class="i-${ST[k].cls}"></i>${ST[k].label} ${c} item (${tot ? pct(c/tot) : '0%'})</span>`;
+  }).join('');
+
+  const useAll = sum(base, d => d.total_pemakaian_30hari), useBad = sum([...kr, ...ku], d => d.total_pemakaian_30hari);
+  const over = base.filter(d => d.days > state.over).length;
+  const emptyList = kr.length ? esc(kr.map(d=>d.nama_brng).join(', ')) : '';
+  $('#stats').innerHTML = `
+    <div class="stat"><div class="n">${n} item</div><div class="l">perlu order sekarang</div></div>
+    <div class="stat"><div class="n ${kr.length?'crit':''}">${kr.length} item</div><div class="l" ${emptyList ? `title="stok kosong: ${emptyList}"` : ''}>stok kosong${emptyList ? ': ' + emptyList : ''}</div></div>
+    <div class="stat"><div class="n">${useAll ? pct(useBad/useAll) : '0%'}</div><div class="l">pemakaian 30 hari berasal dari item yang kurang atau kosong</div></div>
+    <div class="stat"><div class="n">${over} item</div><div class="l">stok lebih dari ${state.over} hari pemakaian</div></div>`;
+}
+
+/* ---------- runway ---------- */
+const setInfo = (id, txt) => { const el = $(id); if (el) el.dataset.tip = txt; };
+
+function runwayInfo(axisMax, all){
+  const H = state.H;
+  return `Cara membaca chart ini\n` +
+    `\u2022 Setiap batang menunjukkan berapa hari stok saat ini bisa menutup pemakaian.\n` +
+    `\u2022 Garis putus-putus adalah akhir periode perencanaan (hari ke-${H}). Batang yang berhenti sebelum garis berarti stok tidak cukup.\n` +
+    `\u2022 Area bergaris merah berarti stok kosong.\n` +
+    `\u2022 Warna: merah = kritis, kuning = kurang, hijau = aman.\n` +
+    (all ? `\u2022 Batang berpanah berarti stok melebihi ${axisMax} hari; angka sebenarnya ada di kanan.\n` : '') +
+    `Sisa hari = stok saat ini \u00F7 rata-rata pemakaian harian (30 hari terakhir). Urut dari yang paling sedikit.`;
+}
+
+function renderRunway(){
+  const H = state.H, all = state.view === 'all';
+  let list = all ? filt.slice() : filt.filter(d => d.order > 0);
+  list.sort((a,b) => a.days - b.days || b.konsumsi_per_hari - a.konsumsi_per_hari);
+  const axisMax = all ? Math.max(30, H*2) : Math.ceil(H*1.3);
+  const hl = H / axisMax * 100;
+  setInfo('#infoRun', runwayInfo(axisMax, all));
+  const nOrder = base.filter(d => d.order > 0).length;
+  $('#runwayTitle').textContent = nOrder ? `${nOrder} item akan kehabisan stok sebelum hari ke-${H}` : `Tidak ada item yang kehabisan stok sebelum hari ke-${H}`;
+  $('#hlLbl').textContent = `Batas kebutuhan: hari ke-${H}`;
+  $('#rwAxis').innerHTML = `<div></div><div class="ax"><span class="z" style="left:0">0</span><span class="hd" style="left:${hl}%">Hari ke-${H}</span><span class="e" style="left:100%">${axisMax} hari</span></div><div></div>`;
+  if (!list.length){
+    $('#runway').innerHTML = `<p class="empty-msg">Tidak ada item yang perlu order dengan filter ini. Ubah filter atau pilih tampilan Semua item.</p>`;
+    return;
+  }
+  $('#runway').innerHTML = list.map(d => {
+    const cls = ST[d.status].cls, clip = d.days > axisMax;
+    const w = d.days <= 0 ? 0 : Math.min(100, d.days / axisMax * 100);
+    return `<div class="rw" data-tip="${tipAttr(d)}">
+      <div class="rl"><span class="nm">${esc(d.nama_brng)}</span><span class="ct">${esc(catName(d.kategori_obat))}, kelas ${d.abc}</span></div>
+      <div class="rt ${d.days<=0?'empty':''}"><span class="bar ${cls} ${clip?'clip':''}" style="width:${w}%"></span><span class="hl" style="left:${hl}%"></span></div>
+      <div class="rv ${cls}">${fmtDays(d.days)}</div></div>`;
+  }).join('');
+}
+
+/* ---------- categories ---------- */
+function renderCats(){
+  const rows = CATS.map(c => {
+    const it = ALL.filter(d => d.kategori_obat === c);
+    const k = it.filter(d => d.status === 'kritis').length, u = it.filter(d => d.status === 'kurang').length, a = it.length - k - u;
+    return {c, n: it.length, k, u, a, bad: k + u};
+  }).sort((x,y) => y.bad - x.bad || y.n - x.n);
+  const maxN = Math.max(...rows.map(r => r.n));
+  const totalBad = sum(rows, r => r.bad), top = rows[0];
+  const sel = rows.find(r => r.c === state.cat);
+  if (sel) $('#catTitle').textContent = `${catName(sel.c)}: ${sel.bad} dari ${sel.n} item perlu order`;
+  else $('#catTitle').textContent = totalBad && top ? `${catName(top.c)} memegang ${top.bad} dari ${totalBad} item bermasalah di seluruh RS` : 'Tidak ada kategori dengan item bermasalah';
+  setInfo('#infoCat', `Cara membaca chart ini\n` +
+    `\u2022 Satu baris adalah satu kategori. Panjang batang menunjukkan jumlah item di kategori itu, bukan jumlah unit.\n` +
+    `\u2022 Warna segmen: merah = kritis (stok kosong), kuning = kurang, hijau = aman. Angka di dalamnya adalah jumlah item.\n` +
+    `\u2022 Teks di kanan atas baris: jumlah item yang perlu order dibanding total item kategori, untuk horizon ${state.H} hari.\n` +
+    `\u2022 Diurutkan dari kategori dengan item bermasalah terbanyak.\n` +
+    `\u2022 Chart ini selalu menampilkan semua kategori. Klik satu baris untuk menyaring bagian lain dashboard, klik lagi untuk melepas.`);
+  $('#cats').innerHTML = rows.map(r => {
+    const seg = (n, cls) => n ? `<span class="${cls}" style="flex:${n} 1 0">${n}</span>` : '';
+    return `<button type="button" class="cat" data-cat="${esc(r.c)}" aria-pressed="${state.cat===r.c}">
+      <div class="top2"><span>${esc(catName(r.c))}</span><span>${r.bad} dari ${r.n} item perlu order</span></div>
+      <div class="stack" style="width:${r.n/maxN*100}%" aria-label="${r.k} kritis, ${r.u} kurang, ${r.a} aman">${seg(r.k,'crit')}${seg(r.u,'warn')}${seg(r.a,'safe')}</div></button>`;
+  }).join('');
+}
+
+/* ---------- pareto ---------- */
+function niceMax(v){
+  const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p;
+  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+}
+function renderPareto(){
+  setInfo('#infoPar', `Cara membaca chart ini\n` +
+    `\u2022 Batang (sumbu kiri): pemakaian 30 hari per item, diurutkan dari terbesar. Warna batang mengikuti status stok.\n` +
+    `\u2022 Garis (sumbu kanan): persentase kumulatif, yaitu berapa persen total pemakaian yang sudah tercakup dari item pertama sampai item tersebut.\n` +
+    `\u2022 Kelas ABC: A = item yang bersama-sama menyumbang 80% pemakaian, B = sampai 95%, C = sisanya. Garis putus-putus menandai 80% dan 95%.\n` +
+    `\u2022 Prioritas utama: batang kuning atau merah di kelas A, karena paling sering dipakai tetapi stoknya kurang.\n` +
+    `\u2022 Kelas dihitung dalam kategori yang dipilih. Pilihan 10 teratas atau Semua tidak mengubah persentase.\n` +
+    `Satuan antar item berbeda, jadi bandingkan urutan dan proporsi, bukan jumlah fisiknya.`);
+  const sorted = base.slice().sort((a,b) => b.total_pemakaian_30hari - a.total_pemakaian_30hari);
+  const A = sorted.filter(d => d.abc === 'A');
+  const badA = A.filter(d => d.order > 0).length;
+  $('#parTitle').textContent = `${A.length} item kelas A menyumbang 80% pemakaian, ${badA} di antaranya perlu order`;
+  if (!sorted.length || !sum(sorted, d => d.total_pemakaian_30hari)){
+    $('#pareto').innerHTML = '<p class="empty-msg">Tidak ada data pemakaian pada filter ini.</p>';
+    return;
+  }
+  const data = sorted.slice(0, state.pn), n = data.length;
+  const W = 760, Hh = 360, ml = 54, mr = 40, mt = 28, mb = 112;
+  const pw = W - ml - mr, ph = Hh - mt - mb;
+  const ymax = niceMax(Math.max(...data.map(d => d.total_pemakaian_30hari)));
+  const bw = pw / n, x = i => ml + bw * i + bw / 2;
+  const yL = v => mt + ph - v / ymax * ph, yR = v => mt + ph - v * ph;
+  let s = `<svg class="pareto" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Grafik Pareto pemakaian 30 hari per item">`;
+  ['A','B','C'].forEach(k => {
+    const idx = data.map((d,i) => d.abc === k ? i : -1).filter(i => i >= 0);
+    if (!idx.length) return;
+    const x0 = ml + bw * idx[0], x1 = ml + bw * (idx[idx.length-1] + 1);
+    if (k !== 'C') s += `<rect x="${x0}" y="${mt}" width="${x1-x0}" height="${ph}" fill="var(--track)" opacity="${k==='A'?1:.5}"/>`;
+    s += `<text x="${(x0+x1)/2}" y="${mt-10}" text-anchor="middle" style="font-weight:700;fill:var(--ink)">Kelas ${k}</text>`;
+  });
+  [0, .25, .5, .75, 1].forEach(t => {
+    s += `<line x1="${ml}" x2="${W-mr}" y1="${yL(ymax*t)}" y2="${yL(ymax*t)}" stroke="var(--line)"/>`;
+    s += `<text x="${ml-8}" y="${yL(ymax*t)+4}" text-anchor="end">${fmt(ymax*t)}</text>`;
+    s += `<text x="${W-mr+8}" y="${yR(t)+4}">${Math.round(t*100)}%</text>`;
+  });
+  s += `<line x1="${ml}" x2="${W-mr}" y1="${yR(.8)}" y2="${yR(.8)}" stroke="var(--ink)" stroke-dasharray="5 4"/>`;
+  s += `<text x="${W-mr-4}" y="${yR(.8)-5}" text-anchor="end" style="fill:var(--ink);font-weight:700">80%</text>`;
+  s += `<line x1="${ml}" x2="${W-mr}" y1="${yR(.95)}" y2="${yR(.95)}" stroke="var(--ink2)" stroke-dasharray="2 4"/>`;
+  s += `<text x="${W-mr-4}" y="${yR(.95)-5}" text-anchor="end">95%</text>`;
+  data.forEach((d,i) => {
+    const cls = ST[d.status].cls, h = d.total_pemakaian_30hari / ymax * ph, dim = state.status !== 'all' && d.status !== state.status;
+    const col = cls === 'crit' ? 'var(--crit)' : cls === 'warn' ? 'var(--warn)' : 'var(--safe)';
+    const label = d.nama_brng.length > 20 ? d.nama_brng.slice(0,19) + '\u2026' : d.nama_brng;
+    s += `<g class="pbar" tabindex="0" data-tip="${esc(`${d.nama_brng}\nPemakaian 30 hari: ${fmt(d.total_pemakaian_30hari)} ${d.satuan}\nKelas ${d.abc}, kumulatif ${pct(d.cum)}\nStatus: ${ST[d.status].label}${d.order>0 ? '\nOrder: '+fmt(d.order)+' '+d.satuan : ''}`)}">
+      <rect x="${x(i)-bw*0.36}" y="${mt+ph-h}" width="${bw*0.72}" height="${h}" fill="${col}" rx="2" opacity="${dim?.25:1}"/>
+      <rect x="${x(i)-bw/2}" y="${mt}" width="${bw}" height="${ph}" fill="transparent"/></g>`;
+    s += `<text transform="translate(${x(i)+3},${mt+ph+10}) rotate(-50)" text-anchor="end" style="font-size:${n>20?10:11}px">${esc(label)}</text>`;
+  });
+  const pts = data.map((d,i) => `${x(i)},${yR(d.cum)}`).join(' ');
+  s += `<polyline points="${pts}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+  data.forEach((d,i) => { s += `<circle cx="${x(i)}" cy="${yR(d.cum)}" r="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5" pointer-events="none"/>`; });
+  s += '</svg>';
+  $('#pareto').innerHTML = s;
+}
+
+/* ---------- table ---------- */
+function renderTable(){
+  const q = state.q.trim().toLowerCase();
+  let rows = filt.filter(d => !q || d.nama_brng.toLowerCase().includes(q));
+  const {key, dir} = state.sort;
+  const val = d => key === 'urgency' ? ST[d.status].rank * 1e7 + d.days : key === 'nama_brng' ? d.nama_brng.toLowerCase() : d[key];
+  rows.sort((a,b) => { const x = val(a), y = val(b); return (x < y ? -1 : x > y ? 1 : 0) * dir || b.konsumsi_per_hari - a.konsumsi_per_hari; });
+  const total = rows.length, size = state.pageSize, pages = Math.max(1, Math.ceil(total / size));
+  state.page = Math.min(Math.max(1, state.page), pages);
+  const start = (state.page - 1) * size;
+  const pageRows = rows.slice(start, start + size);
+  renderPager(total, pages, start, pageRows.length);
+  $('#tblTitle').textContent = `Daftar order: ${base.filter(d=>d.order>0).length} item perlu dipesan untuk ${state.H} hari`;
+  $('#thNeed').textContent = `Kebutuhan ${state.H} hari`;
+  document.querySelectorAll('th[data-k]').forEach(th => {
+    th.setAttribute('aria-sort', th.dataset.k === key ? (dir === 1 ? 'ascending' : 'descending') : 'none');
+  });
+  if (!rows.length){
+    $('#tbody').innerHTML = `<tr><td colspan="8" class="l empty-msg">Tidak ada item yang cocok dengan filter atau pencarian.</td></tr>`;
+    return;
+  }
+  $('#tbody').innerHTML = pageRows.map(d => {
+    const cls = ST[d.status].cls, open = state.open.has(d.kode_brng), cm = d.satuan === 'Centimeter';
+    const roll = cm && d.order > 0 ? `<small>\u2248 ${Math.ceil(d.order/500)} roll (5 m)</small>` : '';
+    const cov = Math.min(1, d.cover);
+    const hl = d.order > 0 ? ' hl-' + cls : '';
+    let r = `<tr class="main${hl}">
+      <td><button type="button" class="nmb" data-open="${d.kode_brng}" aria-expanded="${open}"><span class="car">${open?'\u25BC':'\u25B6'}</span><span>${esc(d.nama_brng)}<small>${esc(catName(d.kategori_obat))}</small></span></button></td>
+      <td class="l"><span class="pill ${cls}">${ST[d.status].label}</span></td>
+      <td class="l"><span class="abc abc-${d.abc}" title="Kelas ${d.abc}">${d.abc}</span></td>
+      <td>${fmt(d.stok_saat_ini)} <span class="muted small">${esc(d.satuan)}</span></td>
+      <td>${fmt(d.need)}</td>
+      <td><div class="cov"><div class="t" aria-hidden="true"><span class="${cls}" style="width:${cov*100}%"></span></div><b>${pct(d.cover)}</b></div></td>
+      <td>${fmtDays(d.days)}</td>
+      <td class="ord">${d.order > 0 ? fmt(d.order) + ' <span class="muted small" style="font-weight:400">' + esc(d.satuan) + '</span>' + roll : '<span class="muted" style="font-weight:400">Tidak perlu</span>'}</td></tr>`;
+    if (open) r += `<tr class="det${hl}"><td colspan="8"><dl>
+      <div><dt>Konsumsi per hari</dt><dd>${nf1.format(d.konsumsi_per_hari)} ${esc(d.satuan)}</dd></div>
+      <div><dt>Pemakaian 30 hari</dt><dd>${fmt(d.total_pemakaian_30hari)} ${esc(d.satuan)}</dd></div>
+      <div><dt>Kebutuhan ${state.H} hari</dt><dd>${fmt(d.need)} ${esc(d.satuan)}</dd></div>
+      <div><dt>Stok habis dalam</dt><dd>${fmtDays(d.days)}</dd></div>
+      <div><dt>Kelas ABC</dt><dd>${d.abc}, kumulatif ${pct(d.cum)}</dd></div>
+      <div><dt>Kode barang</dt><dd>${d.kode_brng}</dd></div></dl></td></tr>`;
+    return r;
+  }).join('');
+}
+
+function renderPager(total, pages, start, count){
+  const el = $('#pager'), cur = state.page;
+  if (!total){ el.innerHTML = '<span>Tidak ada data</span>'; return; }
+  let nums = [];
+  if (pages <= 7) nums = Array.from({length: pages}, (_, i) => i + 1);
+  else {
+    nums = [1];
+    const a = Math.max(2, cur - 1), b = Math.min(pages - 1, cur + 1);
+    if (a > 2) nums.push('\u2026');
+    for (let i = a; i <= b; i++) nums.push(i);
+    if (b < pages - 1) nums.push('\u2026');
+    nums.push(pages);
+  }
+  const btns = nums.map(n => n === '\u2026' ? '<span aria-hidden="true">\u2026</span>' : `<button type="button" data-page="${n}" aria-label="Halaman ${n}" ${n === cur ? 'aria-current="page"' : ''}>${n}</button>`).join('');
+  el.innerHTML = `<span>Menampilkan ${start + 1}\u2013${start + count} dari ${total} item</span>` +
+    (pages > 1 ? `<nav class="pg" aria-label="Halaman tabel"><button type="button" data-page="prev" ${cur === 1 ? 'disabled' : ''}>Sebelumnya</button>${btns}<button type="button" data-page="next" ${cur === pages ? 'disabled' : ''}>Berikutnya</button></nav>` : '');
+}
+
+/* ---------- overstock ---------- */
+function renderOver(){
+  const list = filt.filter(d => d.days > state.over).sort((a,b) => b.days - a.days);
+  const axisMax = Math.max(120, Math.ceil(state.over * 1.5 / 10) * 10);
+  setInfo('#infoOv', `Cara membaca chart ini\n` +
+    `\u2022 Setiap batang menunjukkan berapa hari stok saat ini bisa menutup pemakaian. Hanya item yang melebihi ${state.over} hari yang ditampilkan.\n` +
+    `\u2022 Garis oranye: batas stok berlebih yang Anda atur. Garis putus-putus hitam: horizon perencanaan (${state.H} hari).\n` +
+    `\u2022 Batang berpanah berarti stok melebihi ${axisMax} hari; angka sebenarnya ada di kanan.\n` +
+    `\u2022 Item di sini tidak perlu order. Periksa tanggal kedaluwarsa dan pertimbangkan menunda pembelian berikutnya.\n` +
+    `Batas ${state.over} hari adalah batas kebijakan, bukan standar baku; ubah dengan slider.`);
+  $('#ovTitle').textContent = list.length ? `${list.length} item punya stok lebih dari ${state.over} hari pemakaian` : `Tidak ada item dengan stok berlebih pada filter ini`;
+  if (!list.length){ $('#over').innerHTML = `<p class="empty-msg">Tidak ada item yang stoknya melebihi ${state.over} hari pemakaian.</p>`; return; }
+  $('#over').innerHTML = list.map(d => {
+    const clip = d.days > axisMax, w = Math.min(100, d.days / axisMax * 100);
+    return `<div class="ov" data-tip="${tipAttr(d)}">
+      <div class="rl"><span class="nm">${esc(d.nama_brng)}</span><span class="ct">Stok ${fmt(d.stok_saat_ini)} ${esc(d.satuan)}</span></div>
+      <div class="rt"><span class="bar ${clip?'clip':''}" style="width:${w}%"></span><span class="hl" style="left:${state.H/axisMax*100}%"></span><span class="tl" style="left:${state.over/axisMax*100}%"></span></div>
+      <div class="rv">${fmt(d.days)} hari</div></div>`;
+  }).join('') + `<p class="note">Batang berpanah berarti stok melebihi ${axisMax} hari (angka sebenarnya ada di kanan). Garis putus-putus hitam: horizon perencanaan. Garis oranye: batas stok berlebih.</p>`;
+}
+
+/* ---------- controls ---------- */
+function syncControls(){
+  $('#hzo').textContent = state.H + ' hari';
+  document.querySelectorAll('#stChips .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.st === state.status));
+  document.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === state.view));
+  document.querySelectorAll('[data-pn]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.pn === state.pn));
+  $('#catSel').value = state.cat;
+  $('#pageSize').value = state.pageSize;
+  $('#ovr').value = state.over; $('#ovro').textContent = state.over + ' hari';
+  const c = k => base.filter(d => k === 'all' || d.status === k).length;
+  document.querySelectorAll('#stChips .chip').forEach(b => { b.textContent = (b.dataset.st === 'all' ? 'Semua' : ST[b.dataset.st].label) + ' ' + c(b.dataset.st); });
+}
+
+function render(){
+  ALL = compute();
+  base = ALL.filter(d => state.cat === 'all' || d.kategori_obat === state.cat);
+  assignABC(base);
+  filt = base.filter(d => state.status === 'all' || d.status === state.status);
+  renderHead(); renderRunway(); renderCats(); renderPareto(); renderTable(); renderOver(); syncControls();
+}
+
+/* setup */
+function setupEvents() {
+    $('#hz').addEventListener('input', e => { state.H = +e.target.value; state.page = 1; render(); });
+    $('#catSel').addEventListener('change', e => { state.cat = e.target.value; state.page = 1; render(); });
+    $('#ovr').addEventListener('input', e => { state.over = +e.target.value; render(); });
+    $('#pageSize').addEventListener('change', e => { state.pageSize = +e.target.value; state.page = 1; renderTable(); });
+    $('#q').addEventListener('input', e => { state.q = e.target.value; state.page = 1; renderTable(); });
+    $('#reset').addEventListener('click', () => {
+      Object.assign(state, {H:7, status:'all', cat:'all', view:'order', pn:10, q:'', page:1, pageSize:10, over:60});
+      state.sort = {key:'urgency', dir:1}; state.open.clear();
+      $('#hz').value = 7; $('#q').value = ''; render();
+    });
+    document.addEventListener('click', e => {
+      const t = e.target;
+      let el;
+      if ((el = t.closest('#stChips .chip'))) { state.status = el.dataset.st; state.page = 1; render(); }
+      else if ((el = t.closest('#comp button'))) { state.status = state.status === el.dataset.st ? 'all' : el.dataset.st; state.page = 1; render(); }
+      else if ((el = t.closest('[data-view]'))) { state.view = el.dataset.view; render(); }
+      else if ((el = t.closest('[data-pn]'))) { state.pn = +el.dataset.pn; render(); }
+      else if ((el = t.closest('.cat'))) { state.cat = state.cat === el.dataset.cat ? 'all' : el.dataset.cat; state.page = 1; render(); }
+      else if ((el = t.closest('.info'))) { const r = el.getBoundingClientRect(); showTip(el.dataset.tip, r.left, r.bottom); }
+      else if ((el = t.closest('[data-page]'))) { const v = el.dataset.page; state.page = v === 'prev' ? state.page - 1 : v === 'next' ? state.page + 1 : +v; renderTable(); $('#s-act').scrollIntoView({block:'start'}); }
+      else if ((el = t.closest('[data-open]'))) { const k = +el.dataset.open; state.open.has(k) ? state.open.delete(k) : state.open.add(k); renderTable(); }
+      else if ((el = t.closest('th[data-k]'))) {
+        const k = el.dataset.k;
+        state.sort = state.sort.key === k ? {key:k, dir:-state.sort.dir} : {key:k, dir: (k === 'stok_saat_ini' || k === 'need' || k === 'order') ? -1 : 1};
+        state.page = 1; renderTable();
+      }
+    });
+}
+
+/* tooltip */
+const tip = $('#tip');
+function showTip(text, x, y){
+  tip.textContent = text; tip.hidden = false;
+  tip.style.left = '0px'; tip.style.top = '0px';
+  const r = tip.getBoundingClientRect();
+  const left = Math.max(8, Math.min(x + 14, innerWidth - r.width - 8));
+  let top = y + 16;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tip.style.left = left + 'px'; tip.style.top = Math.max(8, top) + 'px';
+}
+document.addEventListener('pointermove', e => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  t ? showTip(t.dataset.tip, e.clientX, e.clientY) : (tip.hidden = true);
+});
+document.addEventListener('pointerleave', () => { tip.hidden = true; });
+document.addEventListener('focusin', e => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if (t){ const r = t.getBoundingClientRect(); showTip(t.dataset.tip, r.left + r.width/2, r.top); }
+});
+document.addEventListener('focusout', () => { tip.hidden = true; });
+document.addEventListener('scroll', () => { tip.hidden = true; }, {passive:true});
+
+async function fetchData() {
+    try {
+        const res = await fetch('/api/farmasi/perencanaan-stok');
+        RAW = await res.json();
+        
+        CATS = [...new Set(RAW.map(d => d.kategori_obat))];
+        
+        $('#stChips').innerHTML = ['all','kritis','kurang','aman'].map(k => `<button type="button" class="chip" data-st="${k}" aria-pressed="false"></button>`).join('');
+        $('#catSel').innerHTML = `<option value="all">Semua kategori</option>` + CATS.map(c => `<option value="${esc(c)}">${esc(catName(c))}</option>`).join('');
+        
+        setupEvents();
+        render();
+    } catch(err) {
+        console.error("Gagal load data: ", err);
+        document.body.innerHTML = "<h2>Gagal mengambil data dari server. Pastikan backend berjalan.</h2>";
+    }
+}
+
+fetchData();
+</script>
+</body>
+</html>

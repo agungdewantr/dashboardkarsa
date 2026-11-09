@@ -15,11 +15,11 @@ app.use(express.json());
 app.use('/api', dashboardRoutes);
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('╔══════════════════════════════════════════╗');
   console.log('║   🏥 Dashboard RS — Backend Server       ║');
-  console.log(`║   🌐 http://localhost:${PORT}              ║`);
+  console.log(`║   🌐 http://0.0.0.0:${PORT}                ║`);
   console.log('╚══════════════════════════════════════════╝');
   console.log('');
 

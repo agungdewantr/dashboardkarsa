@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import cache, { CACHE_KEYS } from '../services/cache.js';
 import { fetchForDate, fetchForDateRange } from '../services/scheduler.js';
+import db from '../config/database.js';
+import { QUERY_PERENCANAAN_OBAT } from '../queries/farmasi.js';
 
 const router = Router();
 
@@ -99,6 +101,22 @@ router.get('/status', (req, res) => {
     lastUpdated,
     uptime: process.uptime(),
   });
+});
+
+/**
+ * GET /api/farmasi/perencanaan-stok
+ * Menjalankan query untuk proyeksi kebutuhan dan rekomendasi order
+ */
+router.get('/farmasi/perencanaan-stok', async (req, res) => {
+  try {
+    const [rows] = await db.query(QUERY_PERENCANAAN_OBAT);
+    // Kita ubah sedikit struktur datanya agar cocok dengan frontend jika perlu,
+    // namun karena datanya sudah mirip (snake_case -> JSON properties), cukup kirimkan
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching farmasi data:', error.message);
+    res.status(500).json({ error: 'Gagal mengambil data farmasi' });
+  }
 });
 
 export default router;

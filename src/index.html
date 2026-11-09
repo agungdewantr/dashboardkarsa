@@ -18,15 +18,27 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="./style.css" />
+  <script>
+    if (window.location.pathname === '/farmasi') {
+      window.location.replace('/farmasi/');
+    }
+  </script>
 </head>
 
 <body>
   <div id="app">
-    <!-- Header -->
+    <!-- Header Hero Banner -->
     <header class="header" id="header">
+      <div class="header-grid-pattern"></div>
+      <div class="header-glow header-glow-1"></div>
+      <div class="header-glow header-glow-2"></div>
       <div class="header-left">
-        <h1 class="header-title">Dashboard </h1>
-        <p class="header-subtitle">Monitoring Jumlah Pasien RSUD Karsa Husada Batu</p>
+        <div class="header-badge-row">
+          <span class="live-badge"><span class="pulse-dot"></span> Live Monitoring</span>
+          <span class="hospital-badge">RSUD Karsa Husada Batu</span>
+        </div>
+        <h1 class="header-title">Dashboard Monitoring</h1>
+        <p class="header-subtitle">Monitoring operasional & jumlah kunjungan pasien secara real-time</p>
       </div>
       <div class="header-right">
         <div class="date-filter" id="dateFilter">
@@ -182,15 +194,12 @@
     <footer class="footer" id="footer">
       <div class="footer-left">
         <p class="footer-info" id="footerInfo">
-          HASIL TARIKAN DARI SIMRS KHANZA, YANG BELUM TERVALIDASI OLEH BAGIAN RM DAN MONEV RUMAH SAKIT
-          • TERAKHIR DIPERBARUI: <span id="lastUpdated">—</span>
+          <span class="footer-source-badge">SIMRS KHANZA</span>
+          Hasil tarikan data operasional rumah sakit yang belum tervalidasi oleh Bagian RM & Monev RS
+          <span class="footer-dot">•</span>
+          Terakhir diperbarui: <span id="lastUpdated">—</span>
         </p>
       </div>
-      <!-- <div class="footer-right">
-        <a href="#" class="footer-link" id="linkStatus">SYSTEM STATUS</a>
-        <a href="#" class="footer-link" id="linkHelp">HELP DESK</a>
-        <a href="#" class="footer-link" id="linkPrivacy">PRIVACY PROTOCOL</a>
-      </div> -->
     </footer>
   </div>
 
