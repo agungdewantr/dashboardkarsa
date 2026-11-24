@@ -370,10 +370,6 @@
     }
 
     .stat {
-      padding: 16px 18px 6px 0
-    }
-
-    .stat {
       padding: 16px 18px 6px 0;
       min-width: 0
     }
@@ -388,12 +384,6 @@
       font-size: 34px;
       font-weight: 600;
       line-height: 1.1
-    }
-
-    .stat .l {
-      font-size: 13px;
-      color: var(--ink2);
-      margin-top: 2px
     }
 
     .stat .l {
@@ -757,6 +747,25 @@
       font-size: 14px;
       width: 230px;
       max-width: 100%
+    }
+
+    .btn-x {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: var(--paper);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600
+    }
+
+    .btn-x:hover {
+      filter: brightness(1.1)
+    }
+
+    .btn-x:disabled {
+      opacity: .6;
+      cursor: progress
     }
 
     .tbl-wrap {
@@ -1283,7 +1292,8 @@
             <option value="15">15 data</option>
             <option value="20">20 data</option>
             <option value="25">25 data</option>
-          </select></div>
+          </select><button type="button" class="btn-x" id="btnXlsx"
+            title="Unduh data sesuai filter aktif (Excel: sheet Info dan Data)">Unduh Excel</button></div>
       </div>
       <p class="sec-p">Baris berlatar warna adalah item yang perlu order: merah untuk kritis, kuning untuk kurang. Urut
         dari yang paling mendesak. Klik nama item untuk melihat rincian, klik judul kolom untuk mengurutkan.</p>
@@ -1372,8 +1382,12 @@
 
     function compute() {
       return RAW.map(d => {
-        const need = state.H === 7 ? d.estimasi_kebutuhan_7hari : Math.round(d.konsumsi_per_hari * state.H);
-        const order = Math.max(0, Math.ceil(need - d.stok_saat_ini));
+        const total_pemakaian_30hari = +d.total_pemakaian_30hari || 0;
+        const konsumsi_per_hari = +d.konsumsi_per_hari || 0;
+        const estimasi_kebutuhan_7hari = +d.estimasi_kebutuhan_7hari || 0;
+        const stok_saat_ini = +d.stok_saat_ini || 0;
+        const need = state.H === 7 ? estimasi_kebutuhan_7hari : Math.round(konsumsi_per_hari * state.H);
+        const order = Math.max(0, Math.ceil(need - stok_saat_ini));
         // Horizon 7 hari: pakai status_perencanaan dari data backend
         // d.status_perencanaan is from the new API
         let status_str = d.status_perencanaan || d.status_stok;
@@ -1383,8 +1397,19 @@
         if (status_str === 'AMAN') status_key = 'aman';
 
         const status = state.H === 7 && ST[status_key] ? status_key
-          : d.stok_saat_ini <= 0 ? 'kritis' : (order > 0 ? 'kurang' : 'aman');
-        return { ...d, need, order, status, days: d.stok_saat_ini / d.konsumsi_per_hari, cover: need ? d.stok_saat_ini / need : 1 };
+          : stok_saat_ini <= 0 ? 'kritis' : (order > 0 ? 'kurang' : 'aman');
+        return {
+          ...d,
+          total_pemakaian_30hari,
+          konsumsi_per_hari,
+          estimasi_kebutuhan_7hari,
+          stok_saat_ini,
+          need,
+          order,
+          status,
+          days: konsumsi_per_hari > 0 ? stok_saat_ini / konsumsi_per_hari : 0,
+          cover: need ? stok_saat_ini / need : 1
+        };
       });
     }
 
@@ -1427,7 +1452,6 @@
       const emptyList = kr.length ? esc(kr.map(d => d.nama_brng).join(', ')) : '';
       $('#stats').innerHTML = `
     <div class="stat"><div class="n">${n} item</div><div class="l">perlu order sekarang</div></div>
-    <div class="stat"><div class="n ${kr.length ? 'crit' : ''}">${kr.length} item</div><div class="l">stok kosong${kr.length ? ': ' + esc(kr.map(d => d.nama_brng).join(', ')) : ''}</div></div>
     <div class="stat"><div class="n ${kr.length ? 'crit' : ''}">${kr.length} item</div><div class="l" ${emptyList ? `title="stok kosong: ${emptyList}"` : ''}>stok kosong${emptyList ? ': ' + emptyList : ''}</div></div>
     <div class="stat"><div class="n">${useAll ? pct(useBad / useAll) : '0%'}</div><div class="l">pemakaian 30 hari berasal dari item yang kurang atau kosong</div></div>
     <div class="stat"><div class="n">${over} item</div><div class="l">stok lebih dari ${state.over} hari pemakaian</div></div>`;
@@ -1580,12 +1604,13 @@
         return;
       }
       $('#tbody').innerHTML = pageRows.map(d => {
-        const cls = ST[d.status].cls, open = state.open.has(d.kode_brng), cm = d.satuan === 'Centimeter';
+        const kodeKey = String(d.kode_brng);
+        const cls = ST[d.status].cls, open = state.open.has(kodeKey), cm = d.satuan === 'Centimeter';
         const roll = cm && d.order > 0 ? `<small>\u2248 ${Math.ceil(d.order / 500)} roll (5 m)</small>` : '';
         const cov = Math.min(1, d.cover);
         const hl = d.order > 0 ? ' hl-' + cls : '';
         let r = `<tr class="main${hl}">
-      <td><button type="button" class="nmb" data-open="${d.kode_brng}" aria-expanded="${open}"><span class="car">${open ? '\u25BC' : '\u25B6'}</span><span>${esc(d.nama_brng)}<small>${esc(catName(d.kategori_obat))}</small></span></button></td>
+      <td><button type="button" class="nmb" data-open="${esc(kodeKey)}" aria-expanded="${open}"><span class="car">${open ? '\u25BC' : '\u25B6'}</span><span>${esc(d.nama_brng)}<small>${esc(catName(d.kategori_obat))}</small></span></button></td>
       <td class="l"><span class="pill ${cls}">${ST[d.status].label}</span></td>
       <td class="l"><span class="abc abc-${d.abc}" title="Kelas ${d.abc}">${d.abc}</span></td>
       <td>${fmt(d.stok_saat_ini)} <span class="muted small">${esc(d.satuan)}</span></td>
@@ -1664,6 +1689,175 @@
       renderHead(); renderRunway(); renderCats(); renderPareto(); renderTable(); renderOver(); syncControls();
     }
 
+    /* ---------- export excel ----------
+       buildExportData() hanya menyiapkan data (tanpa library), sehingga mudah dipindah ke framework lain.
+       exportExcel() mengubah hasilnya menjadi file .xlsx bergaya memakai ExcelJS (dimuat saat tombol diklik). */
+    const EXCELJS_SRC = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    let excelLoading = null;
+    function loadExcelJS() {
+      if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+      if (!excelLoading) excelLoading = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = EXCELJS_SRC;
+        s.onload = () => window.ExcelJS ? resolve(window.ExcelJS) : reject(new Error('library Excel tidak tersedia'));
+        s.onerror = () => { excelLoading = null; s.remove(); reject(new Error('gagal memuat library Excel')); };
+        document.head.appendChild(s);
+      });
+      return excelLoading;
+    }
+
+    const roundTo = (n, dp = 0) => Number.isFinite(n) ? Math.round(n * 10 ** dp) / 10 ** dp : null;
+    const pad2 = n => String(n).padStart(2, '0');
+
+    // Data yang diexport = data tabel sesuai filter aktif (kategori, status, pencarian), urut prioritas.
+    function exportRows() {
+      const q = state.q.trim().toLowerCase();
+      return filt.filter(d => !q || d.nama_brng.toLowerCase().includes(q))
+        .sort((a, b) => ST[a.status].rank - ST[b.status].rank || a.days - b.days || b.konsumsi_per_hari - a.konsumsi_per_hari);
+    }
+
+    function buildExportData(now = new Date()) {
+      const H = state.H, list = exportRows();
+      const columns = [
+        { h: 'Prioritas', w: 10, desc: 'Urutan kemendesakan: Kritis, lalu Kurang, lalu Aman. Dalam status yang sama, sisa hari paling sedikit lebih dulu.' },
+        { h: 'Kode Barang', w: 12, desc: 'Kode barang dari sistem sumber, dipakai untuk mencocokkan dengan data lain.' },
+        { h: 'Nama Barang', w: 34, desc: 'Nama obat atau alat kesehatan.' },
+        { h: 'Kategori', w: 20, desc: 'Kategori obat atau alkes.' },
+        { h: 'Satuan', w: 12, desc: 'Satuan hitung untuk kolom stok, pemakaian, konsumsi, kebutuhan, dan order.' },
+        { h: 'Status Stok', w: 12, desc: 'Kritis = stok 0. Kurang = stok ada tetapi kurang dari kebutuhan. Aman = stok mencukupi horizon.' },
+        { h: 'Kelas ABC', w: 10, desc: 'A = item yang bersama-sama menyumbang 80% pemakaian, B = sampai 95%, C = sisanya. Dihitung dalam filter kategori.' },
+        { h: '% Kumulatif Pemakaian', w: 22, z: '0.0', desc: 'Persentase kumulatif pemakaian 30 hari, dari item dengan pemakaian terbesar sampai item ini. Dasar penentuan kelas ABC.' },
+        { h: 'Stok Saat Ini', w: 14, desc: 'Jumlah stok saat data diambil.' },
+        { h: 'Pemakaian 30 Hari', w: 18, desc: 'Total pemakaian selama 30 hari terakhir.' },
+        { h: 'Konsumsi per Hari', w: 18, z: '0.00', desc: 'Rata-rata pemakaian harian (pemakaian 30 hari \u00F7 30).' },
+        { h: `Kebutuhan ${H} Hari`, w: 16, z: '#,##0', desc: `Perkiraan kebutuhan selama horizon ${H} hari (konsumsi per hari \u00D7 ${H}).` },
+        { h: 'Cakupan (%)', w: 12, z: '0', desc: 'Stok saat ini \u00F7 kebutuhan \u00D7 100. Di bawah 100 berarti stok tidak cukup untuk horizon.' },
+        { h: 'Sisa Hari Stok', w: 14, z: '0.0', desc: 'Perkiraan berapa hari stok saat ini bisa menutup pemakaian (stok \u00F7 konsumsi per hari).' },
+        { h: 'Stok Berlebih', w: 14, desc: `Ya jika sisa hari stok melebihi batas stok berlebih (${state.over} hari).` },
+        { h: 'Order Disarankan', w: 18, z: '#,##0', desc: 'Kebutuhan dikurangi stok saat ini, dibulatkan ke atas. 0 jika stok cukup.' },
+        { h: 'Keterangan', w: 32, desc: 'Catatan tambahan, misalnya stok kosong atau konversi cm ke roll.' },
+      ];
+
+      const rows = list.map((d, i) => {
+        const ket = [];
+        if (d.status === 'kritis') ket.push('Stok kosong');
+        if (d.satuan === 'Centimeter' && d.order > 0) ket.push(`\u2248 ${Math.ceil(d.order / 500)} roll (1 roll = 500 cm)`);
+        return [
+          i + 1, d.kode_brng, d.nama_brng, catName(d.kategori_obat), d.satuan, ST[d.status].label, d.abc,
+          roundTo(d.cum * 100, 1), Number(d.stok_saat_ini), Number(d.total_pemakaian_30hari), Number(d.konsumsi_per_hari), Number(d.need),
+          roundTo(d.cover * 100), roundTo(Math.max(0, d.days), 1), d.days > state.over ? 'Ya' : 'Tidak', Number(d.order), ket.join('; ')
+        ];
+      });
+
+      const count = f => list.filter(f).length;
+      const stamp = `${pad2(now.getDate())}-${pad2(now.getMonth() + 1)}-${now.getFullYear()} ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+      const info = [
+        ['Perencanaan Obat dan Alkes'],
+        [],
+        ['Sumber data', 'Database Perencanaan Stok Obat (Real-time)'],
+        ['Tanggal export', stamp],
+        ['Horizon perencanaan', `${H} hari`],
+        ['Filter kategori', state.cat === 'all' ? 'Semua kategori' : catName(state.cat)],
+        ['Filter status', state.status === 'all' ? 'Semua status' : ST[state.status].label],
+        ['Pencarian nama', state.q.trim() || '-'],
+        ['Batas stok berlebih', `${state.over} hari`],
+        ['Urutan data', 'Berdasarkan prioritas (kolom Prioritas)'],
+        [],
+        ['RINGKASAN'],
+        ['Jumlah item', list.length],
+        ['Kritis (stok kosong)', count(d => d.status === 'kritis')],
+        ['Kurang (perlu order)', count(d => d.status === 'kurang')],
+        ['Aman', count(d => d.status === 'aman')],
+        ['Kelas A', count(d => d.abc === 'A')],
+        ['Kelas A yang perlu order', count(d => d.abc === 'A' && d.order > 0)],
+        [`Stok berlebih (> ${state.over} hari)`, count(d => d.days > state.over)],
+        [],
+        ['PENJELASAN KOLOM (sheet Data)'],
+        ...columns.map(c => [c.h, c.desc]),
+        [],
+        ['CATATAN'],
+        ['Asumsi', 'Konsumsi harian dianggap tetap sama dengan rata-rata 30 hari terakhir.'],
+        ['Belum termasuk', 'Stok pengaman, lead time pemasok, anggaran, harga, dan tanggal kedaluwarsa.'],
+        ['Satuan', 'Satuan antar item tidak seragam. Jangan menjumlahkan stok atau order lintas item.'],
+      ];
+
+      const fileName = `perencanaan_obat_${H}hari_${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}_${pad2(now.getHours())}${pad2(now.getMinutes())}.xlsx`;
+      return { fileName, info, columns, rows };
+    }
+
+    async function exportExcel() {
+      const btn = $('#btnXlsx');
+      const data = buildExportData();
+      if (!data.rows.length) { alert('Tidak ada data untuk diexport dengan filter ini.'); return; }
+      const label = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Menyiapkan\u2026';
+      try {
+        const ExcelJS = await loadExcelJS();
+        const XL = { brand: 'FF0E4A55', white: 'FFFFFFFF', crit: 'FFF7DFDC', critText: 'FFB8281F', warn: 'FFFAE9C8', line: 'FFD0DBDA' };
+        const fill = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+        const nCol = data.columns.length;
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Dashboard Perencanaan Obat dan Alkes';
+        wb.created = new Date();
+
+        // Sheet 1: Info. Baris 1 kolom = judul/sub-judul, baris 2 kolom = label + nilai.
+        const wsInfo = wb.addWorksheet('Info');
+        wsInfo.columns = [{ width: 32 }, { width: 110 }];
+        data.info.forEach((r, i) => {
+          const row = wsInfo.addRow(r);
+          if (r.length === 1) {
+            row.getCell(1).font = i === 0 ? { bold: true, size: 14, color: { argb: XL.brand } } : { bold: true, color: { argb: XL.brand } };
+          } else if (r.length === 2) {
+            row.getCell(1).font = { bold: true };
+            row.getCell(1).alignment = { vertical: 'top' };
+            row.getCell(2).alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+          }
+        });
+
+        // Sheet 2: Data. Header dan 3 kolom pertama (Prioritas, Kode, Nama) dibekukan.
+        const ws = wb.addWorksheet('Data', { views: [{ state: 'frozen', xSplit: 3, ySplit: 1 }] });
+        ws.columns = data.columns.map(c => ({ header: c.h, width: c.w }));
+        ws.addRows(data.rows);
+
+        const head = ws.getRow(1);
+        head.height = 32;
+        for (let c = 1; c <= nCol; c++) {
+          const cell = head.getCell(c);
+          cell.font = { bold: true, color: { argb: XL.white } };
+          cell.fill = fill(XL.brand);
+          cell.alignment = { vertical: 'middle', wrapText: true };
+        }
+        ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: nCol } };
+
+        // Warna baris mengikuti tabel dashboard: Kritis merah muda, Kurang kuning.
+        const iStatus = data.columns.findIndex(c => c.h === 'Status Stok') + 1;
+        for (let r = 2; r <= data.rows.length + 1; r++) {
+          const row = ws.getRow(r), st = row.getCell(iStatus).value;
+          const bg = st === ST.kritis.label ? XL.crit : st === ST.kurang.label ? XL.warn : null;
+          for (let c = 1; c <= nCol; c++) {
+            const cell = row.getCell(c), z = data.columns[c - 1].z;
+            if (z && typeof cell.value === 'number') cell.numFmt = z;
+            if (bg) cell.fill = fill(bg);
+            cell.border = { bottom: { style: 'thin', color: { argb: XL.line } } };
+          }
+          if (st === ST.kritis.label) row.getCell(iStatus).font = { bold: true, color: { argb: XL.critText } };
+        }
+
+        const buf = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = data.fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      } catch (err) {
+        alert('Export gagal: ' + err.message + '.\nPastikan komputer terhubung ke internet untuk memuat library Excel.');
+      } finally {
+        btn.disabled = false; btn.textContent = label;
+      }
+    }
+
     /* setup */
     function setupEvents() {
       $('#hz').addEventListener('input', e => { state.H = +e.target.value; state.page = 1; render(); });
@@ -1671,6 +1865,7 @@
       $('#ovr').addEventListener('input', e => { state.over = +e.target.value; render(); });
       $('#pageSize').addEventListener('change', e => { state.pageSize = +e.target.value; state.page = 1; renderTable(); });
       $('#q').addEventListener('input', e => { state.q = e.target.value; state.page = 1; renderTable(); });
+      $('#btnXlsx').addEventListener('click', exportExcel);
       $('#reset').addEventListener('click', () => {
         Object.assign(state, { H: 7, status: 'all', cat: 'all', view: 'order', pn: 10, q: '', page: 1, pageSize: 10, over: 60 });
         state.sort = { key: 'urgency', dir: 1 }; state.open.clear();
@@ -1686,7 +1881,7 @@
         else if ((el = t.closest('.cat'))) { state.cat = state.cat === el.dataset.cat ? 'all' : el.dataset.cat; state.page = 1; render(); }
         else if ((el = t.closest('.info'))) { const r = el.getBoundingClientRect(); showTip(el.dataset.tip, r.left, r.bottom); }
         else if ((el = t.closest('[data-page]'))) { const v = el.dataset.page; state.page = v === 'prev' ? state.page - 1 : v === 'next' ? state.page + 1 : +v; renderTable(); $('#s-act').scrollIntoView({ block: 'start' }); }
-        else if ((el = t.closest('[data-open]'))) { const k = +el.dataset.open; state.open.has(k) ? state.open.delete(k) : state.open.add(k); renderTable(); }
+        else if ((el = t.closest('[data-open]'))) { const k = String(el.dataset.open); state.open.has(k) ? state.open.delete(k) : state.open.add(k); renderTable(); }
         else if ((el = t.closest('th[data-k]'))) {
           const k = el.dataset.k;
           state.sort = state.sort.key === k ? { key: k, dir: -state.sort.dir } : { key: k, dir: (k === 'stok_saat_ini' || k === 'need' || k === 'order') ? -1 : 1 };
